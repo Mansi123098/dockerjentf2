@@ -1,9 +1,9 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE_NAME = 'my-terraform-image'
-        DOCKER_REGISTRY = 'docker.io' // Docker Hub URL
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Jenkins credentials ID for Docker
+        DOCKER_IMAGE_NAME = 'my-terraform-image' // Ensure this is a valid Docker name
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
     stages {
         stage('Checkout Code') {
@@ -14,22 +14,31 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with a specific tag
-                    def customImage = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}") // Tag with build ID
+                    // Ensure BUILD_ID is a valid tag, e.g., a number or alphanumeric string
+                    def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
+                    def customImage = docker.build("${DOCKER_IMAGE_NAME}:${buildTag}")
+                    echo "Built Docker image with tag ${DOCKER_IMAGE_NAME}:${buildTag}"
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Login to Docker registry
                     docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
-                        // Tag the built image
-                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").tag("${DOCKER_IMAGE_NAME}:latest")
-
+                        def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
+                        def image = docker.image("${DOCKER_IMAGE_NAME}:${buildTag}")
+                        
+                        // Tag the built image as 'latest'
+                        image.tag("${DOCKER_IMAGE_NAME}:latest")
+                        echo "Tagged Docker image as ${DOCKER_IMAGE_NAME}:latest"
+                        
                         // Push the Docker image to Docker Hub
-                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push('latest')
-                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push("${env.BUILD_ID}") // Push tagged version
+                        image.push('latest')
+                        echo "Pushed Docker image with tag latest"
+                        
+                        // Push the Docker image with the build ID tag
+                        image.push("${buildTag}")
+                        echo "Pushed Docker image with tag ${buildTag}"
                     }
                 }
             }
@@ -37,8 +46,8 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    // Run Terraform init in the Docker container
-                    docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").inside {
+                    def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
+                    docker.image("${DOCKER_IMAGE_NAME}:${buildTag}").inside {
                         sh 'terraform init'
                     }
                 }
@@ -47,8 +56,8 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 script {
-                    // Run Terraform plan in the Docker container
-                    docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").inside {
+                    def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
+                    docker.image("${DOCKER_IMAGE_NAME}:${buildTag}").inside {
                         sh 'terraform plan'
                     }
                 }
@@ -57,8 +66,8 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    // Run Terraform apply in the Docker container
-                    docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").inside {
+                    def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
+                    docker.image("${DOCKER_IMAGE_NAME}:${buildTag}").inside {
                         sh 'terraform apply -auto-approve'
                     }
                 }
