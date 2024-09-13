@@ -19,17 +19,17 @@ pipeline {
                 }
             }
         }
-        #stage('Push Docker Image') {
-         #   steps {
-          #      script {
-           #         docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
-            #            // Push the Docker image to Docker Hub
-             #           docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push('latest')
-              #          docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push("${env.BUILD_ID}") // Push tagged version
-               #     }
-                #}
-            #}
-        #}
+        stage('Push Docker Image') {
+           steps {
+                script {
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                       // Push the Docker image to Docker Hub
+                       docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push('latest')
+                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push("${env.BUILD_ID}") // Push tagged version
+                  }
+                }
+            }
+        }
         stage('Terraform Init') {
             steps {
                 script {
