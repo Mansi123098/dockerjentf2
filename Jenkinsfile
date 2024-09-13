@@ -46,8 +46,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-                    def buildTag = "${env.BUILD_ID}".replaceAll("[^a-zA-Z0-9_-]", "_")
-                    docker.image("${DOCKER_IMAGE_NAME}:${buildTag}").inside {
+                    
                         sh 'terraform init'
                     }
                 }
