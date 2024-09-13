@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE_NAME = 'my-terraform-image1'
+        DOCKER_IMAGE_NAME = 'my-terraform-image'
         DOCKER_REGISTRY = 'docker.io' // Change this to your Docker registry if different
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Jenkins credentials ID for Docker
     }
