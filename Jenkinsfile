@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE_NAME = 'my-terraform-image'
-        DOCKER_REGISTRY = 'docker.io' // Change this to your Docker registry if different
+        DOCKER_REGISTRY = 'docker.io' // Docker Hub URL
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Jenkins credentials ID for Docker
     }
     stages {
@@ -14,19 +14,23 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    def customImage = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}") // Tag with build ID for versioning
+                    // Build the Docker image with a specific tag
+                    def customImage = docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}") // Tag with build ID
                 }
             }
         }
         stage('Push Docker Image') {
-           steps {
+            steps {
                 script {
-                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
-                       // Push the Docker image to Docker Hub
-                       docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push('latest')
+                    // Login to Docker registry
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                        // Tag the built image
+                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").tag("${DOCKER_IMAGE_NAME}:latest")
+
+                        // Push the Docker image to Docker Hub
+                        docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push('latest')
                         docker.image("${DOCKER_IMAGE_NAME}:${env.BUILD_ID}").push("${env.BUILD_ID}") // Push tagged version
-                  }
+                    }
                 }
             }
         }
