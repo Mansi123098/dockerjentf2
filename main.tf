@@ -3,7 +3,7 @@ provider "aws" {
 }
 resource "aws_instance" "mn23" {
   instance_type = "t2.micro"
-  ami           = "ami-0182f373e66f89c85"
+  ami           = "ami-0e86e20dae9224db8"
   tags = {
     Name = "mn23"
   }
